@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Asistencia</title>
+    <!-- Cargamos Tailwind CSS desde internet para diseñar rápido -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white font-sans flex flex-col items-center justify-center min-h-screen p-4">
+
+    <!-- CONTENEDOR PRINCIPAL DE LA APP -->
+    <div id="app" class="w-full max-w-md bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-700">
+        
+        <!-- HEADER -->
+        <header class="text-center mb-8">
+            <h1 class="text-2xl font-bold tracking-wider text-cyan-400"> SISTEMA ASISTENCIA</h1>
+            <p class="text-xs text-gray-400 mt-1"> LURA</p>
+        </header>
+
+        <!-- PANTALLA 1: INICIO DE SESIÓN -->
+        <div id="pantalla-login" class="space-y-6">
+            <h2 class="text-xl font-semibold text-center text-gray-200">Ingreso de Personal</h2>
+            
+            <form id="form-login" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Nombre o Código</label>
+                    <input type="text" id="login-nombre" required placeholder="Ej. Pedro Lopez" 
+                        class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Contraseña</label>
+                    <input type="password" id="login-password" required placeholder="••••••••" 
+                        class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors">
+                </div>
+
+                <button type="submit" 
+                    class="w-full bg-cyan-500 hover:bg-cyan-600 text-gray-900 font-bold py-3 rounded-lg shadow-lg hover:shadow-cyan-500/20 transition-all uppercase tracking-wider mt-2">
+                    Entrar
+                </button>
+            </form>
+            
+            <div class="text-center pt-2">
+                <button id="btn-ir-admin" class="text-xs text-cyan-400/70 hover:text-cyan-400 underline">
+                    Acceso Administrador
+                </button>
+            </div>
+        </div>
+
+        <!-- NOTA: Aquí iremos agregando las siguientes pantallas (Asistencia, Reportes, Admin) -->
+
+    </div>
+
+</body>
+</html>
