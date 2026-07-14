@@ -1,0 +1,15 @@
+/* Estilos globales personalizados para el proyecto */
+html, body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Personalización de la barra de desplazamiento en la lista de usuarios */
+#lista-usuarios-contenedor::-webkit-scrollbar {
+    width: 4px;
+}
+#lista-usuarios-contenedor::-webkit-scrollbar-thumb {
+    background-color: #4b5563;
+    border-radius: 4px;
+}
