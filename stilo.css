@@ -1,3 +1,19 @@
+/* Configuración exclusiva para cuando se manda a imprimir */
+@media print {
+    body * {
+        visibility: hidden; /* Oculta toda la app web */
+    }
+    #area-impresion, #area-impresion * {
+        visibility: visible; /* Solo muestra la tabla blanca */
+    }
+    #area-impresion {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        border: none;
+    }
+}
 /* Estilos globales personalizados para el proyecto */
 html, body {
     margin: 0;

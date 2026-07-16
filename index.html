@@ -92,42 +92,88 @@
             </button>
         </div>
 
-        <!-- PANTALLA 3: VISTA ADMINISTRADOR -->
-        <div id="pantalla-admin" class="hidden space-y-6">
-            <div class="flex justify-between items-center border-b border-gray-700 pb-3">
+       <!-- PANTALLA 3: VISTA ADMINISTRADOR -->
+        <div id="pantalla-admin" class="hidden space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-700 pb-2">
                 <h2 class="text-lg font-bold text-cyan-400">Panel Administrador</h2>
                 <button id="btn-admin-salir" class="text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded-lg">Salir</button>
             </div>
 
-            <form id="form-add-usuario" class="bg-gray-900 p-4 rounded-xl border border-gray-700 space-y-3">
-                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Añadir Compañero</h3>
-                <div>
-                    <input type="text" id="add-nombre" required placeholder="Nombre Completo" 
-                        class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500">
-                </div>
-                <div>
-                    <input type="password" id="add-password" required placeholder="Contraseña" 
-                        class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500">
-                </div>
-                <button type="submit" class="w-full bg-cyan-500 hover:bg-cyan-600 text-gray-900 font-bold py-2 rounded-lg text-xs uppercase tracking-wider">
-                    Añadir Usuario
-                </button>
-            </form>
-
-            <div class="space-y-3">
-                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Compañeros Registrados</h3>
-                <div id="lista-usuarios-contenedor" class="space-y-2 max-h-32 overflow-y-auto pr-1"></div>
+            <!-- Sistema de Pestañas -->
+            <div class="flex space-x-2 border-b border-gray-700 pb-2">
+                <button id="tab-gestion" class="bg-cyan-600 text-white px-4 py-1.5 rounded-t-lg text-sm font-bold transition-colors">Gestión</button>
+                <button id="tab-reportes" class="bg-gray-800 text-gray-400 hover:text-gray-200 px-4 py-1.5 rounded-t-lg text-sm font-bold transition-colors">Reportes</button>
             </div>
 
-            <div class="space-y-3 pt-2 border-t border-gray-700/50">
-                <h3 class="text-xs font-bold text-amber-400 tracking-wider uppercase">Historial de Marcas</h3>
-                <div id="lista-asistencias-admin" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+            <!-- ============================== -->
+            <!-- PESTAÑA A: GESTIÓN (Original) -->
+            <!-- ============================== -->
+            <div id="admin-gestion" class="space-y-4">
+                <form id="form-add-usuario" class="bg-gray-900 p-4 rounded-xl border border-gray-700 space-y-3">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Añadir Compañero</h3>
+                    <div><input type="text" id="add-nombre" required placeholder="Nombre Completo" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"></div>
+                    <div><input type="password" id="add-password" required placeholder="Contraseña" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"></div>
+                    <button type="submit" class="w-full bg-cyan-500 hover:bg-cyan-600 text-gray-900 font-bold py-2 rounded-lg text-xs uppercase tracking-wider">Añadir Usuario</button>
+                </form>
+
+                <div class="space-y-3">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Compañeros Registrados</h3>
+                    <div id="lista-usuarios-contenedor" class="space-y-2 max-h-32 overflow-y-auto pr-1"></div>
+                </div>
+
+                <div class="space-y-3 pt-2 border-t border-gray-700/50">
+                    <h3 class="text-xs font-bold text-amber-400 tracking-wider uppercase">Historial de Marcas</h3>
+                    <div id="lista-asistencias-admin" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+
+            <!-- ============================== -->
+            <!-- PESTAÑA B: REPORTES (Nueva)   -->
+            <!-- ============================== -->
+            <div id="admin-reportes" class="hidden space-y-4">
+                <div class="bg-gray-900 p-4 rounded-xl border border-gray-700 space-y-3">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Filtro de Quincena</h3>
+                    <div class="flex space-x-2">
+                        <div class="w-1/2">
+                            <label class="text-xs text-gray-500 block mb-1">Desde:</label>
+                            <input type="date" id="filtro-inicio" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-sm text-white focus:outline-none">
+                        </div>
+                        <div class="w-1/2">
+                            <label class="text-xs text-gray-500 block mb-1">Hasta:</label>
+                            <input type="date" id="filtro-fin" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-sm text-white focus:outline-none">
+                        </div>
+                    </div>
+                    <div class="flex space-x-2 pt-2">
+                        <button id="btn-generar-reporte" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 rounded-lg text-xs uppercase tracking-wider">Generar Resumen</button>
+                    </div>
+                </div>
+
+                <div class="text-right">
+                    <button id="btn-imprimir" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg text-xs tracking-wider uppercase shadow-lg">🖨️ Imprimir Reporte</button>
+                </div>
+
+                <!-- ÁREA DE IMPRESIÓN (Blanco y Negro para papel) -->
+                <div id="area-impresion" class="bg-white text-black p-4 rounded border hidden">
+                    <h2 class="text-lg font-bold text-center mb-1 uppercase">Reporte de Asistencia</h2>
+                    <p id="rango-impresion" class="text-xs text-center text-gray-600 mb-4"></p>
+                    <table class="w-full text-xs text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-200 border-b-2 border-gray-800">
+                                <th class="p-2 border border-gray-400">Empleado</th>
+                                <th class="p-2 border border-gray-400 text-center">Días</th>
+                                <th class="p-2 border border-gray-400 text-center">H. Normales</th>
+                                <th class="p-2 border border-gray-400 text-center">H. Extras</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-reporte-body">
+                            <!-- CARGA DE TU LÓGICA -->
+                                <script src="app.js"></script>
+                            </body>
+                            </html>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-    </div>
-
-    <!-- CARGA DE TU LÓGICA -->
-    <script src="app.js"></script>
-</body>
-</html>
+   

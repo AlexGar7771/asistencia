@@ -363,3 +363,98 @@ function cerrarSesionSistema() {
     
     irAPantalla(pantallaLogin);
 }
+// ==========================================
+// 7. MÓDULO DE REPORTES Y PESTAÑAS (ADMIN)
+// ==========================================
+const tabGestion = document.getElementById('tab-gestion');
+const tabReportes = document.getElementById('tab-reportes');
+const adminGestion = document.getElementById('admin-gestion');
+const adminReportes = document.getElementById('admin-reportes');
+
+const filtroInicio = document.getElementById('filtro-inicio');
+const filtroFin = document.getElementById('filtro-fin');
+const btnGenerarReporte = document.getElementById('btn-generar-reporte');
+const btnImprimir = document.getElementById('btn-imprimir');
+const areaImpresion = document.getElementById('area-impresion');
+const tablaReporteBody = document.getElementById('tabla-reporte-body');
+const rangoImpresion = document.getElementById('rango-impresion');
+
+// Cambiar de Pestañas
+tabGestion.addEventListener('click', () => {
+    adminGestion.classList.remove('hidden');
+    adminReportes.classList.add('hidden');
+    // Estilos de pestaña activa
+    tabGestion.classList.replace('bg-gray-800', 'bg-cyan-600');
+    tabGestion.classList.replace('text-gray-400', 'text-white');
+    tabReportes.classList.replace('bg-cyan-600', 'bg-gray-800');
+    tabReportes.classList.replace('text-white', 'text-gray-400');
+});
+
+tabReportes.addEventListener('click', () => {
+    adminReportes.classList.remove('hidden');
+    adminGestion.classList.add('hidden');
+    // Estilos de pestaña activa
+    tabReportes.classList.replace('bg-gray-800', 'bg-cyan-600');
+    tabReportes.classList.replace('text-gray-400', 'text-white');
+    tabGestion.classList.replace('bg-cyan-600', 'bg-gray-800');
+    tabGestion.classList.replace('text-white', 'text-gray-400');
+});
+
+// Lógica para Generar el Reporte de Quincena
+btnGenerarReporte.addEventListener('click', async () => {
+    const inicio = filtroInicio.value;
+    const fin = filtroFin.value;
+
+    if (!inicio || !fin) {
+        alert("⚠️ Por favor selecciona ambas fechas para la quincena.");
+        return;
+    }
+
+    // Buscamos en Supabase filtrando por el rango de fechas (gte = Mayor o igual / lte = Menor o igual)
+    const { data: registros, error } = await clienteSupabase
+        .from('asistencias')
+        .select(`horas_normales, horas_extra, usuarios(nombre)`)
+        .gte('fecha', inicio)
+        .lte('fecha', fin);
+
+    if (error || !registros || registros.length === 0) {
+        alert("No se encontraron registros en estas fechas.");
+        areaImpresion.classList.add('hidden');
+        btnImprimir.classList.add('hidden');
+        return;
+    }
+
+    // Agrupamos y sumamos
+    const resumen = {};
+    registros.forEach(reg => {
+        const nombre = reg.usuarios ? reg.usuarios.nombre : 'Eliminado';
+        if (!resumen[nombre]) {
+            resumen[nombre] = { dias: 0, normales: 0, extras: 0 };
+        }
+        resumen[nombre].dias += 1;
+        resumen[nombre].normales += parseFloat(reg.horas_normales || 0);
+        resumen[nombre].extras += parseFloat(reg.horas_extra || 0);
+    });
+
+    // Dibujamos la tabla
+    tablaReporteBody.innerHTML = "";
+    for (const [nombre, datos] of Object.entries(resumen)) {
+        tablaReporteBody.innerHTML += `
+            <tr class="border-b border-gray-300">
+                <td class="p-2 border border-gray-400 font-bold">${nombre}</td>
+                <td class="p-2 border border-gray-400 text-center">${datos.dias}</td>
+                <td class="p-2 border border-gray-400 text-center">${datos.normales.toFixed(1)} h</td>
+                <td class="p-2 border border-gray-400 text-center">${datos.extras.toFixed(1)} h</td>
+            </tr>
+        `;
+    }
+
+    rangoImpresion.innerText = `Período: ${inicio} al ${fin}`;
+    areaImpresion.classList.remove('hidden');
+    btnImprimir.classList.remove('hidden');
+});
+
+// Disparar orden de impresión
+btnImprimir.addEventListener('click', () => {
+    window.print();
+});
