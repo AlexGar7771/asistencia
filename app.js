@@ -1,5 +1,5 @@
 // ==========================================
-// 1. CONFIGURACIÓN DE CONEXIÓN CON base de datos
+// 🔴 CONFIGURACIÓN DE CONEXIÓN CON SUPABASE
 // ==========================================
 const miUrl = "https://udwtfwicbwpdbxefnmth.supabase.co"; 
 const miKey = "sb_publishable_S582CVeyAW6QzN_5RwTXRA_cFBxQloI";
@@ -7,6 +7,18 @@ const miKey = "sb_publishable_S582CVeyAW6QzN_5RwTXRA_cFBxQloI";
 const clienteSupabase = supabase.createClient(miUrl, miKey);
 
 let usuarioLogueado = null; 
+
+// ==========================================
+// 🕒 RELOJ LOCAL (SOLUCIÓN DEL TIMEZONE)
+// ==========================================
+// Esta función obliga al sistema a usar la fecha exacta de tu computadora
+function obtenerFechaLocal() {
+    const ahora = new Date();
+    const año = ahora.getFullYear();
+    const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+    const dia = String(ahora.getDate()).padStart(2, '0');
+    return `${año}-${mes}-${dia}`;
+}
 
 // ==========================================
 // 2. SELECTORES DE PANTALLAS Y ELEMENTOS DOM
@@ -37,15 +49,13 @@ const listaUsuariosContenedor = document.getElementById('lista-usuarios-contened
 const listaAsistenciasAdmin = document.getElementById('lista-asistencias-admin');
 
 // ==========================================
-// 3. INICIO DE SESIÓN CON BASE DE DATOS REAL
+// 3. INICIO DE SESIÓN 
 // ==========================================
 formLogin.addEventListener('submit', async function(e) {
     e.preventDefault(); 
     
     const nombreIngresado = inputNombre.value.trim();
     const passwordIngresada = inputPassword.value;
-
-    console.log("Intentando iniciar sesión para:", nombreIngresado);
 
     try {
         const { data: usuarioValido, error } = await clienteSupabase
@@ -56,14 +66,12 @@ formLogin.addEventListener('submit', async function(e) {
             .maybeSingle(); 
 
         if (error) {
-            console.error("Error devuelto por Supabase:", error);
             alert(`❌ Error de conexión: ${error.message}`);
             return;
         }
 
         if (usuarioValido) {
             usuarioLogueado = usuarioValido; 
-            console.log("Usuario verificado correctamente:", usuarioValido);
 
             if (usuarioValido.rol === 'administrador') {
                 irAPantalla(pantallaAdmin);
@@ -76,12 +84,11 @@ formLogin.addEventListener('submit', async function(e) {
                 verificarMarcaDelDia(); 
             }
         } else {
-            alert(" Nombre o contraseña incorrectos.");
+            alert("❌ Nombre o contraseña incorrectos.");
         }
 
     } catch (err) {
-        console.error("Fallo crítico del navegador capturado:", err);
-        alert(`Error del sistema: ${err.message || err}`);
+        alert(`🚨 Error del sistema: ${err.message || err}`);
     }
 });
 
@@ -107,7 +114,7 @@ btnAdminSalir.addEventListener('click', cerrarSesionSistema);
 btnEntrada.addEventListener('click', async function() {
     const ahora = new Date();
     const horaEntradaTexto = ahora.toLocaleTimeString('es-ES', { hour12: false });
-    const fechaHoyTexto = ahora.toISOString().split('T')[0]; 
+    const fechaHoyTexto = obtenerFechaLocal(); // <-- FIX APLICADO
 
     const { error } = await clienteSupabase
         .from('asistencias')
@@ -118,8 +125,7 @@ btnEntrada.addEventListener('click', async function() {
         }]);
 
     if (error) {
-        alert("No se pudo guardar la entrada en el servidor.");
-        console.error(error);
+        alert("❌ No se pudo guardar la entrada en el servidor.");
         return;
     }
 
@@ -131,12 +137,12 @@ btnEntrada.addEventListener('click', async function() {
 });
 
 // ==========================================
-// 5. REGISTRO DE SALIDA Y CÁLCULO EN LA NUBE
+// 5. REGISTRO DE SALIDA Y CÁLCULO 
 // ==========================================
 btnSalida.addEventListener('click', async function() {
     const ahora = new Date();
     const horaSalidaTexto = ahora.toLocaleTimeString('es-ES', { hour12: false });
-    const fechaHoyTexto = ahora.toISOString().split('T')[0];
+    const fechaHoyTexto = obtenerFechaLocal(); // <-- FIX APLICADO
 
     const { data: asistenciaHoy, error: errFetch } = await clienteSupabase
         .from('asistencias')
@@ -175,7 +181,7 @@ btnSalida.addEventListener('click', async function() {
         .eq('id', asistenciaHoy.id);
 
     if (errUpdate) {
-        alert(" No se pudo registrar tu salida.");
+        alert("❌ No se pudo registrar tu salida.");
         return;
     }
 
@@ -188,7 +194,8 @@ btnSalida.addEventListener('click', async function() {
 });
 
 async function verificarMarcaDelDia() {
-    const fechaHoyTexto = new Date().toISOString().split('T')[0];
+    const fechaHoyTexto = obtenerFechaLocal(); // <-- FIX APLICADO
+    
     const { data: marca } = await clienteSupabase
         .from('asistencias')
         .select('*')
@@ -215,7 +222,7 @@ async function verificarMarcaDelDia() {
 }
 
 // ==========================================
-// 6. GESTIÓN DE USUARIOS
+// 6. GESTIÓN DE COMPAÑEROS
 // ==========================================
 formAddUsuario.addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -266,7 +273,7 @@ window.eliminarUsuario = async function(id, nombre) {
 };
 
 // ==========================================
-// 7. REPORTE GENERAL DE ASISTENCIAS (ADMIN) HORAS VISUALES
+// 📋 REPORTE GENERAL DE ASISTENCIAS (ADMIN)
 // ==========================================
 async function renderizarAsistenciasAdmin() {
     listaAsistenciasAdmin.innerHTML = "";
@@ -284,13 +291,11 @@ async function renderizarAsistenciasAdmin() {
         return;
     }
 
-    // 1. Agrupar los datos por usuario
     const reporteAgrupado = {};
 
     registros.forEach((reg) => {
         const nombreTrabajador = reg.usuarios ? reg.usuarios.nombre : 'Usuario Eliminado';
         
-        // Si el usuario no existe en nuestro objeto, lo creamos
         if (!reporteAgrupado[nombreTrabajador]) {
             reporteAgrupado[nombreTrabajador] = {
                 diasTrabajados: 0,
@@ -300,21 +305,17 @@ async function renderizarAsistenciasAdmin() {
             };
         }
         
-        // Suma DE TOTALES 
         reporteAgrupado[nombreTrabajador].diasTrabajados += 1;
         reporteAgrupado[nombreTrabajador].totalNormales += parseFloat(reg.horas_normales || 0);
         reporteAgrupado[nombreTrabajador].totalExtras += parseFloat(reg.horas_extra || 0);
         
-        // Guardamos el día específico para el desglose
         reporteAgrupado[nombreTrabajador].detalles.push(reg);
     });
 
-    // 2. Renderizar las tarjetas por usuario
     for (const [nombre, datos] of Object.entries(reporteAgrupado)) {
         const divUsuario = document.createElement('div');
         divUsuario.className = "bg-gray-800 p-4 rounded-xl border border-gray-700 mb-4";
         
-        // Cabecera con el resumen total del usuario
         let htmlContenido = `
             <div class="border-b border-gray-600 pb-2 mb-3">
                 <h3 class="text-lg font-bold text-cyan-400">${nombre}</h3>
@@ -327,7 +328,6 @@ async function renderizarAsistenciasAdmin() {
             <div class="space-y-2">
         `;
 
-        // Desglose de cada día trabajado
         datos.detalles.forEach(reg => {
             const salidaTexto = reg.hora_salida ? reg.hora_salida.slice(0, 5) : '--:--';
             htmlContenido += `
@@ -344,4 +344,22 @@ async function renderizarAsistenciasAdmin() {
         divUsuario.innerHTML = htmlContenido;
         listaAsistenciasAdmin.appendChild(divUsuario);
     }
+}
+
+btnLogout.addEventListener('click', cerrarSesionSistema);
+
+function cerrarSesionSistema() {
+    inputNombre.value = "";
+    inputPassword.value = "";
+    usuarioLogueado = null;
+    
+    repEntrada.innerText = '--:-- Horas';
+    repSalida.innerText = '--:-- Horas';
+    repTotal.innerText = '0 Horas';
+    repExtra.innerText = '0 Horas';
+
+    btnEntrada.disabled = false;
+    btnEntrada.classList.remove('opacity-50', 'cursor-not-allowed');
+    
+    irAPantalla(pantallaLogin);
 }
