@@ -29,3 +29,37 @@ html, body {
     background-color: #4b5563;
     border-radius: 4px;
 }
+/* ==========================================
+   ⏱️ EFECTO FUTURISTA DEL TIMER
+   ========================================== */
+.efecto-futurista {
+    font-family: 'VT323', monospace;
+    font-size: 3.5rem; /* Tamaño grande */
+    color: #ffffff;
+    letter-spacing: 4px;
+    /* Efecto de resplandor Neón */
+    text-shadow: 
+        0 0 5px #fff,
+        0 0 10px #22d3ee,
+        0 0 20px #22d3ee,
+        0 0 40px #06b6d4,
+        0 0 80px #0891b2;
+    /* Llamada a la animación de parpadeo */
+    animation: parpadeo-neon 2s infinite alternate;
+}
+
+/* Animación de inestabilidad (Glitch/Flicker) */
+@keyframes parpadeo-neon {
+    0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+        opacity: 1;
+        text-shadow: 
+            0 0 5px #fff,
+            0 0 10px #22d3ee,
+            0 0 20px #22d3ee,
+            0 0 40px #06b6d4;
+    }
+    20%, 24%, 55% {
+        opacity: 0.7;
+        text-shadow: none; /* Apaga el brillo por una fracción de segundo */
+    }
+}

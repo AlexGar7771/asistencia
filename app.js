@@ -9,15 +9,24 @@ const clienteSupabase = supabase.createClient(miUrl, miKey);
 let usuarioLogueado = null; 
 
 // ==========================================
-// 🕒 RELOJ LOCAL (SOLUCIÓN DEL TIMEZONE)
+// 🕒 RELOJ LOCAL (SOLUCIÓN DEL TIMEZONE Y MEDIANOCHE)
 // ==========================================
-// Esta función obliga al sistema a usar la fecha exacta de tu computadora
+// Función para la fecha exacta
 function obtenerFechaLocal() {
     const ahora = new Date();
     const año = ahora.getFullYear();
     const mes = String(ahora.getMonth() + 1).padStart(2, '0');
     const dia = String(ahora.getDate()).padStart(2, '0');
     return `${año}-${mes}-${dia}`;
+}
+
+// NUEVA FUNCIÓN: Obliga a la hora a tener siempre 2 dígitos (ej: 00:03:00) para evitar el NaN
+function obtenerHoraLocal() {
+    const ahora = new Date();
+    const h = String(ahora.getHours()).padStart(2, '0');
+    const m = String(ahora.getMinutes()).padStart(2, '0');
+    const s = String(ahora.getSeconds()).padStart(2, '0');
+    return `${h}:${m}:${s}`;
 }
 
 // ==========================================
@@ -47,6 +56,9 @@ const addNombre = document.getElementById('add-nombre');
 const addPassword = document.getElementById('add-password');
 const listaUsuariosContenedor = document.getElementById('lista-usuarios-contenedor');
 const listaAsistenciasAdmin = document.getElementById('lista-asistencias-admin');
+const displayTimer = document.getElementById('display-timer');
+const timerNumeros = document.getElementById('timer-numeros');
+let intervaloTimer = null; 
 
 // ==========================================
 // 3. INICIO DE SESIÓN 
@@ -109,12 +121,47 @@ btnIrAdmin.addEventListener('click', () => {
 btnAdminSalir.addEventListener('click', cerrarSesionSistema);
 
 // ==========================================
+// ⏱️ LÓGICA DEL CRONÓMETRO EN TIEMPO REAL
+// ==========================================
+function iniciarTimer(horaEntradaTexto) {
+    displayTimer.classList.remove('hidden');
+    const fechaHoy = obtenerFechaLocal();
+    
+    // 🛠️ PARCHE ANTI-NaN: Si la hora viene sin el 0 inicial, se lo ponemos a la fuerza
+    const horaArreglada = horaEntradaTexto.padStart(8, '0');
+    
+    const tiempoInicio = new Date(`${fechaHoy}T${horaArreglada}`).getTime();
+
+    if (intervaloTimer) clearInterval(intervaloTimer);
+
+    intervaloTimer = setInterval(() => {
+        const ahora = new Date().getTime();
+        const diferencia = ahora - tiempoInicio;
+
+        const horas = Math.floor((diferencia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutos = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60));
+        const segundos = Math.floor((diferencia % (1000 * 60)) / 1000);
+
+        const h = String(horas).padStart(2, '0');
+        const m = String(minutos).padStart(2, '0');
+        const s = String(segundos).padStart(2, '0');
+
+        timerNumeros.innerText = `${h}:${m}:${s}`;
+    }, 1000);
+}
+
+function detenerTimer() {
+    if (intervaloTimer) clearInterval(intervaloTimer);
+}
+
+// ==========================================
 // 4. REGISTRO DE ENTRADA 
 // ==========================================
 btnEntrada.addEventListener('click', async function() {
-    const ahora = new Date();
-    const horaEntradaTexto = ahora.toLocaleTimeString('es-ES', { hour12: false });
-    const fechaHoyTexto = obtenerFechaLocal(); // <-- FIX APLICADO
+    const horaEntradaTexto = obtenerHoraLocal(); // <-- FIX APLICADO AQUÍ
+    const fechaHoyTexto = obtenerFechaLocal(); 
+
+    iniciarTimer(horaEntradaTexto); 
 
     const { error } = await clienteSupabase
         .from('asistencias')
@@ -140,9 +187,9 @@ btnEntrada.addEventListener('click', async function() {
 // 5. REGISTRO DE SALIDA Y CÁLCULO 
 // ==========================================
 btnSalida.addEventListener('click', async function() {
-    const ahora = new Date();
-    const horaSalidaTexto = ahora.toLocaleTimeString('es-ES', { hour12: false });
-    const fechaHoyTexto = obtenerFechaLocal(); // <-- FIX APLICADO
+    detenerTimer();
+    const horaSalidaTexto = obtenerHoraLocal(); // <-- FIX APLICADO AQUÍ
+    const fechaHoyTexto = obtenerFechaLocal(); 
 
     const { data: asistenciaHoy, error: errFetch } = await clienteSupabase
         .from('asistencias')
@@ -156,7 +203,11 @@ btnSalida.addEventListener('click', async function() {
         return;
     }
 
-    const entradaObj = new Date(`${fechaHoyTexto}T${asistenciaHoy.hora_entrada}`);
+    // 🛠️ PARCHE ANTI-NaN TAMBIÉN PARA EL CÁLCULO DE HORAS TOTALES
+    const horaArreglada = asistenciaHoy.hora_entrada.padStart(8, '0');
+    const entradaObj = new Date(`${fechaHoyTexto}T${horaArreglada}`);
+    const ahora = new Date();
+    
     const diferenciaMilisegundos = ahora - entradaObj;
     const horasTotales = diferenciaMilisegundos / (1000 * 60 * 60);
 
@@ -194,7 +245,7 @@ btnSalida.addEventListener('click', async function() {
 });
 
 async function verificarMarcaDelDia() {
-    const fechaHoyTexto = obtenerFechaLocal(); // <-- FIX APLICADO
+    const fechaHoyTexto = obtenerFechaLocal(); 
     
     const { data: marca } = await clienteSupabase
         .from('asistencias')
@@ -204,17 +255,23 @@ async function verificarMarcaDelDia() {
         .maybeSingle();
 
     if (marca) {
-        if (marca.hora_entrada) {
+        if (marca.hora_entrada && !marca.hora_salida) {
             repEntrada.innerText = `${marca.hora_entrada.slice(0, 5)} Horas`;
             btnEntrada.disabled = true;
             btnEntrada.classList.add('opacity-50', 'cursor-not-allowed');
             btnSalida.disabled = false;
             btnSalida.classList.remove('opacity-50', 'cursor-not-allowed');
+            
+            iniciarTimer(marca.hora_entrada); 
         }
-        if (marca.hora_salida) {
+        else if (marca.hora_entrada && marca.hora_salida) {
+            repEntrada.innerText = `${marca.hora_entrada.slice(0, 5)} Horas`;
             repSalida.innerText = `${marca.hora_salida.slice(0, 5)} Horas`;
             repTotal.innerText = `${marca.horas_normales} Horas`;
             repExtra.innerText = `${marca.horas_extra} Horas Extra`;
+            
+            btnEntrada.disabled = true;
+            btnEntrada.classList.add('opacity-50', 'cursor-not-allowed');
             btnSalida.disabled = true;
             btnSalida.classList.add('opacity-50', 'cursor-not-allowed');
         }
@@ -360,9 +417,12 @@ function cerrarSesionSistema() {
 
     btnEntrada.disabled = false;
     btnEntrada.classList.remove('opacity-50', 'cursor-not-allowed');
+    detenerTimer();
+    displayTimer.classList.add('hidden');
     
     irAPantalla(pantallaLogin);
 }
+
 // ==========================================
 // 7. MÓDULO DE REPORTES Y PESTAÑAS (ADMIN)
 // ==========================================
