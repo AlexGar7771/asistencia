@@ -14,6 +14,7 @@
         border: none;
     }
 }
+
 /* Estilos globales personalizados para el proyecto */
 html, body {
     margin: 0;
@@ -22,15 +23,18 @@ html, body {
 }
 
 /* Personalización de la barra de desplazamiento en la lista de usuarios */
-#lista-usuarios-contenedor::-webkit-scrollbar {
+#lista-usuarios-contenedor::-webkit-scrollbar,
+#lista-asistencias-admin::-webkit-scrollbar {
     width: 4px;
 }
-#lista-usuarios-contenedor::-webkit-scrollbar-thumb {
+#lista-usuarios-contenedor::-webkit-scrollbar-thumb,
+#lista-asistencias-admin::-webkit-scrollbar-thumb {
     background-color: #4b5563;
     border-radius: 4px;
 }
+
 /* ==========================================
-   ⏱️ EFECTO FUTURISTA DEL TIMER
+   ⏱ EFECTO FUTURISTA DEL TIMER
    ========================================== */
 .efecto-futurista {
     font-family: 'VT323', monospace;
@@ -44,7 +48,7 @@ html, body {
         0 0 20px #22d3ee,
         0 0 40px #06b6d4,
         0 0 80px #0891b2;
-    /* Llamada a la animación de parpadeo */
+    /* animación de parpadeo */
     animation: parpadeo-neon 2s infinite alternate;
 }
 

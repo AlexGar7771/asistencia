@@ -11,7 +11,6 @@ let usuarioLogueado = null;
 // ==========================================
 // 🕒 RELOJ LOCAL (SOLUCIÓN DEL TIMEZONE Y MEDIANOCHE)
 // ==========================================
-// Función para la fecha exacta
 function obtenerFechaLocal() {
     const ahora = new Date();
     const año = ahora.getFullYear();
@@ -20,7 +19,6 @@ function obtenerFechaLocal() {
     return `${año}-${mes}-${dia}`;
 }
 
-// NUEVA FUNCIÓN: Obliga a la hora a tener siempre 2 dígitos (ej: 00:03:00) para evitar el NaN
 function obtenerHoraLocal() {
     const ahora = new Date();
     const h = String(ahora.getHours()).padStart(2, '0');
@@ -59,6 +57,13 @@ const listaAsistenciasAdmin = document.getElementById('lista-asistencias-admin')
 const displayTimer = document.getElementById('display-timer');
 const timerNumeros = document.getElementById('timer-numeros');
 let intervaloTimer = null; 
+
+// Selectores del Historial Individual
+const btnVerHistorial = document.getElementById('btn-ver-historial');
+const contenedorHistorial = document.getElementById('contenedor-historial');
+const btnCerrarHistorial = document.getElementById('btn-cerrar-historial');
+const listaMiHistorial = document.getElementById('lista-mi-historial');
+const miHistorialTotal = document.getElementById('mi-historial-total');
 
 // ==========================================
 // 3. INICIO DE SESIÓN 
@@ -127,9 +132,7 @@ function iniciarTimer(horaEntradaTexto) {
     displayTimer.classList.remove('hidden');
     const fechaHoy = obtenerFechaLocal();
     
-    // 🛠️ PARCHE ANTI-NaN: Si la hora viene sin el 0 inicial, se lo ponemos a la fuerza
     const horaArreglada = horaEntradaTexto.padStart(8, '0');
-    
     const tiempoInicio = new Date(`${fechaHoy}T${horaArreglada}`).getTime();
 
     if (intervaloTimer) clearInterval(intervaloTimer);
@@ -158,7 +161,7 @@ function detenerTimer() {
 // 4. REGISTRO DE ENTRADA 
 // ==========================================
 btnEntrada.addEventListener('click', async function() {
-    const horaEntradaTexto = obtenerHoraLocal(); // <-- FIX APLICADO AQUÍ
+    const horaEntradaTexto = obtenerHoraLocal();
     const fechaHoyTexto = obtenerFechaLocal(); 
 
     iniciarTimer(horaEntradaTexto); 
@@ -188,7 +191,7 @@ btnEntrada.addEventListener('click', async function() {
 // ==========================================
 btnSalida.addEventListener('click', async function() {
     detenerTimer();
-    const horaSalidaTexto = obtenerHoraLocal(); // <-- FIX APLICADO AQUÍ
+    const horaSalidaTexto = obtenerHoraLocal(); 
     const fechaHoyTexto = obtenerFechaLocal(); 
 
     const { data: asistenciaHoy, error: errFetch } = await clienteSupabase
@@ -203,7 +206,6 @@ btnSalida.addEventListener('click', async function() {
         return;
     }
 
-    // 🛠️ PARCHE ANTI-NaN TAMBIÉN PARA EL CÁLCULO DE HORAS TOTALES
     const horaArreglada = asistenciaHoy.hora_entrada.padStart(8, '0');
     const entradaObj = new Date(`${fechaHoyTexto}T${horaArreglada}`);
     const ahora = new Date();
@@ -279,6 +281,51 @@ async function verificarMarcaDelDia() {
 }
 
 // ==========================================
+// 5.5 HISTORIAL INDIVIDUAL (VISTA EMPLEADO)
+// ==========================================
+btnVerHistorial.addEventListener('click', async () => {
+    contenedorHistorial.classList.remove('hidden');
+    listaMiHistorial.innerHTML = `<p class="text-center text-gray-500 text-xs">Buscando datos...</p>`;
+
+    const { data: misMarcas, error } = await clienteSupabase
+        .from('asistencias')
+        .select('*')
+        .eq('usuario_id', usuarioLogueado.id)
+        .order('fecha', { ascending: false });
+
+    if (error || !misMarcas || misMarcas.length === 0) {
+        listaMiHistorial.innerHTML = `<p class="text-center text-gray-500 text-xs py-2">No tienes historial registrado.</p>`;
+        miHistorialTotal.innerText = "0 h";
+        return;
+    }
+
+    listaMiHistorial.innerHTML = "";
+    let sumaTotal = 0;
+
+    misMarcas.forEach(marca => {
+        const entrada = marca.hora_entrada ? marca.hora_entrada.slice(0, 5) : '--:--';
+        const salida = marca.hora_salida ? marca.hora_salida.slice(0, 5) : '--:--';
+        const normales = parseFloat(marca.horas_normales || 0);
+        sumaTotal += normales;
+
+        listaMiHistorial.innerHTML += `
+            <div class="flex justify-between items-center bg-gray-800 p-2 rounded border border-gray-700">
+                <span class="text-gray-400 w-20">${marca.fecha}</span>
+                <span class="text-emerald-400">E: ${entrada}</span>
+                <span class="text-rose-400">S: ${salida}</span>
+                <span class="text-cyan-400 font-bold">${normales}h</span>
+            </div>
+        `;
+    });
+
+    miHistorialTotal.innerText = `${sumaTotal.toFixed(1)} Horas`;
+});
+
+btnCerrarHistorial.addEventListener('click', () => {
+    contenedorHistorial.classList.add('hidden');
+});
+
+// ==========================================
 // 6. GESTIÓN DE COMPAÑEROS
 // ==========================================
 formAddUsuario.addEventListener('submit', async function(e) {
@@ -329,9 +376,6 @@ window.eliminarUsuario = async function(id, nombre) {
     }
 };
 
-// ==========================================
-// 📋 REPORTE GENERAL DE ASISTENCIAS (ADMIN)
-// ==========================================
 async function renderizarAsistenciasAdmin() {
     listaAsistenciasAdmin.innerHTML = "";
 
@@ -365,7 +409,6 @@ async function renderizarAsistenciasAdmin() {
         reporteAgrupado[nombreTrabajador].diasTrabajados += 1;
         reporteAgrupado[nombreTrabajador].totalNormales += parseFloat(reg.horas_normales || 0);
         reporteAgrupado[nombreTrabajador].totalExtras += parseFloat(reg.horas_extra || 0);
-        
         reporteAgrupado[nombreTrabajador].detalles.push(reg);
     });
 
@@ -403,8 +446,6 @@ async function renderizarAsistenciasAdmin() {
     }
 }
 
-btnLogout.addEventListener('click', cerrarSesionSistema);
-
 function cerrarSesionSistema() {
     inputNombre.value = "";
     inputPassword.value = "";
@@ -419,12 +460,13 @@ function cerrarSesionSistema() {
     btnEntrada.classList.remove('opacity-50', 'cursor-not-allowed');
     detenerTimer();
     displayTimer.classList.add('hidden');
+    contenedorHistorial.classList.add('hidden');
     
     irAPantalla(pantallaLogin);
 }
 
 // ==========================================
-// 7. MÓDULO DE REPORTES Y PESTAÑAS (ADMIN)
+// 7. MÓDULO DE REPORTES Y EXCEL (ADMIN)
 // ==========================================
 const tabGestion = document.getElementById('tab-gestion');
 const tabReportes = document.getElementById('tab-reportes');
@@ -435,15 +477,16 @@ const filtroInicio = document.getElementById('filtro-inicio');
 const filtroFin = document.getElementById('filtro-fin');
 const btnGenerarReporte = document.getElementById('btn-generar-reporte');
 const btnImprimir = document.getElementById('btn-imprimir');
+const btnExportar = document.getElementById('btn-exportar'); 
 const areaImpresion = document.getElementById('area-impresion');
 const tablaReporteBody = document.getElementById('tabla-reporte-body');
 const rangoImpresion = document.getElementById('rango-impresion');
 
-// Cambiar de Pestañas
+let datosParaExcel = ""; 
+
 tabGestion.addEventListener('click', () => {
     adminGestion.classList.remove('hidden');
     adminReportes.classList.add('hidden');
-    // Estilos de pestaña activa
     tabGestion.classList.replace('bg-gray-800', 'bg-cyan-600');
     tabGestion.classList.replace('text-gray-400', 'text-white');
     tabReportes.classList.replace('bg-cyan-600', 'bg-gray-800');
@@ -453,68 +496,112 @@ tabGestion.addEventListener('click', () => {
 tabReportes.addEventListener('click', () => {
     adminReportes.classList.remove('hidden');
     adminGestion.classList.add('hidden');
-    // Estilos de pestaña activa
     tabReportes.classList.replace('bg-gray-800', 'bg-cyan-600');
     tabReportes.classList.replace('text-gray-400', 'text-white');
     tabGestion.classList.replace('bg-cyan-600', 'bg-gray-800');
     tabGestion.classList.replace('text-white', 'text-gray-400');
 });
 
-// Lógica para Generar el Reporte de Quincena
 btnGenerarReporte.addEventListener('click', async () => {
     const inicio = filtroInicio.value;
     const fin = filtroFin.value;
 
     if (!inicio || !fin) {
-        alert("⚠️ Por favor selecciona ambas fechas para la quincena.");
+        alert("⚠️ Por favor selecciona ambas fechas.");
         return;
     }
 
-    // Buscamos en Supabase filtrando por el rango de fechas (gte = Mayor o igual / lte = Menor o igual)
     const { data: registros, error } = await clienteSupabase
         .from('asistencias')
-        .select(`horas_normales, horas_extra, usuarios(nombre)`)
+        .select(`fecha, hora_entrada, hora_salida, horas_normales, horas_extra, usuarios(nombre)`)
         .gte('fecha', inicio)
-        .lte('fecha', fin);
+        .lte('fecha', fin)
+        .order('fecha', { ascending: true });
 
     if (error || !registros || registros.length === 0) {
         alert("No se encontraron registros en estas fechas.");
         areaImpresion.classList.add('hidden');
         btnImprimir.classList.add('hidden');
+        btnExportar.classList.add('hidden');
         return;
     }
 
-    // Agrupamos y sumamos
-    const resumen = {};
+    // Agrupamos por empleado e inicializamos las sumatorias
+    const reporteAgrupado = {};
     registros.forEach(reg => {
         const nombre = reg.usuarios ? reg.usuarios.nombre : 'Eliminado';
-        if (!resumen[nombre]) {
-            resumen[nombre] = { dias: 0, normales: 0, extras: 0 };
+        if (!reporteAgrupado[nombre]) {
+            reporteAgrupado[nombre] = { detalles: [], sumNormales: 0, sumExtras: 0 };
         }
-        resumen[nombre].dias += 1;
-        resumen[nombre].normales += parseFloat(reg.horas_normales || 0);
-        resumen[nombre].extras += parseFloat(reg.horas_extra || 0);
+        reporteAgrupado[nombre].detalles.push(reg);
+        reporteAgrupado[nombre].sumNormales += parseFloat(reg.horas_normales || 0);
+        reporteAgrupado[nombre].sumExtras += parseFloat(reg.horas_extra || 0);
     });
 
-    // Dibujamos la tabla
     tablaReporteBody.innerHTML = "";
-    for (const [nombre, datos] of Object.entries(resumen)) {
+    datosParaExcel = "Empleado;Fecha;Hora Entrada;Hora Salida;Horas Normales;Horas Extras\n";
+
+    // Dibujamos el reporte con subtotales
+    for (const [nombre, datos] of Object.entries(reporteAgrupado)) {
+        
         tablaReporteBody.innerHTML += `
-            <tr class="border-b border-gray-300">
-                <td class="p-2 border border-gray-400 font-bold">${nombre}</td>
-                <td class="p-2 border border-gray-400 text-center">${datos.dias}</td>
-                <td class="p-2 border border-gray-400 text-center">${datos.normales.toFixed(1)} h</td>
-                <td class="p-2 border border-gray-400 text-center">${datos.extras.toFixed(1)} h</td>
+            <tr class="bg-gray-300 border-b-2 border-gray-800">
+                <td colspan="6" class="p-2 font-bold text-black uppercase">👤 ${nombre}</td>
             </tr>
         `;
+        
+        datosParaExcel += `\nREPORTE DE: ${nombre};;;;;\n`;
+
+        datos.detalles.forEach(reg => {
+            const entrada = reg.hora_entrada ? reg.hora_entrada.slice(0, 5) : '--:--';
+            const salida = reg.hora_salida ? reg.hora_salida.slice(0, 5) : '--:--';
+            const normales = reg.horas_normales || "0.0";
+            const extras = reg.horas_extra || "0.0";
+
+            tablaReporteBody.innerHTML += `
+                <tr class="border-b border-gray-300">
+                    <td class="p-2 border border-gray-400 pl-4 text-gray-600">↳</td>
+                    <td class="p-2 border border-gray-400 text-center">${reg.fecha}</td>
+                    <td class="p-2 border border-gray-400 text-center text-emerald-700">${entrada}</td>
+                    <td class="p-2 border border-gray-400 text-center text-rose-700">${salida}</td>
+                    <td class="p-2 border border-gray-400 text-center">${normales} h</td>
+                    <td class="p-2 border border-gray-400 text-center font-bold">${extras} h</td>
+                </tr>
+            `;
+            
+            datosParaExcel += `;${reg.fecha};${entrada};${salida};${normales};${extras}\n`;
+        });
+
+        // INYECCIÓN DE LA FILA DE TOTALES EN HTML Y EXCEL
+        tablaReporteBody.innerHTML += `
+            <tr class="bg-cyan-900/10 border-b-4 border-gray-500 font-bold text-cyan-700">
+                <td colspan="4" class="p-2 text-right uppercase">Total Acumulado:</td>
+                <td class="p-2 text-center text-emerald-600">${datos.sumNormales.toFixed(1)} h</td>
+                <td class="p-2 text-center text-amber-600">${datos.sumExtras.toFixed(1)} h</td>
+            </tr>
+        `;
+        
+        datosParaExcel += `;;;TOTALES:;${datos.sumNormales.toFixed(1)};${datos.sumExtras.toFixed(1)}\n`;
     }
 
-    rangoImpresion.innerText = `Período: ${inicio} al ${fin}`;
+    rangoImpresion.innerText = `Período detallado: ${inicio} al ${fin}`;
     areaImpresion.classList.remove('hidden');
     btnImprimir.classList.remove('hidden');
+    btnExportar.classList.remove('hidden');
 });
 
-// Disparar orden de impresión
+btnExportar.addEventListener('click', () => {
+    const BOM = "\uFEFF"; 
+    const blob = new Blob([BOM + datosParaExcel], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Reporte_Individual_${filtroInicio.value}_al_${filtroFin.value}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+});
+
 btnImprimir.addEventListener('click', () => {
     window.print();
 });
