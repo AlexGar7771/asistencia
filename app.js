@@ -7,6 +7,9 @@ const clienteSupabase = supabase.createClient(miUrl, miKey);
 
 let usuarioLogueado = null; 
 
+// ==========================================
+// 🕒 UTILIDADES DE FECHA Y HORA
+// ==========================================
 function obtenerFechaLocal() {
     const ahora = new Date();
     const año = ahora.getFullYear();
@@ -30,15 +33,21 @@ function obtenerSemanaActual() {
     return `${d.getFullYear()}-W${String(Math.ceil(days / 7)).padStart(2, '0')}`;
 }
 
+// ==========================================
+// SELECTORES DOM
+// ==========================================
 const pantallaLogin = document.getElementById('pantalla-login');
 const pantallaAsistencia = document.getElementById('pantalla-asistencia');
 const pantallaAdmin = document.getElementById('pantalla-admin');
+const formLogin = document.getElementById('form-login');
+const inputNombre = document.getElementById('login-nombre');
+const inputPassword = document.getElementById('login-password');
 const displayTimer = document.getElementById('display-timer');
 const timerNumeros = document.getElementById('timer-numeros');
 let intervaloTimer = null; 
 
 // ==========================================
-// 1. LOGIN Y PERFIL
+// 1. INICIO DE SESIÓN 
 // ==========================================
 document.getElementById('form-login').addEventListener('submit', async function(e) {
     e.preventDefault(); 
@@ -202,17 +211,38 @@ document.getElementById('form-add-usuario').addEventListener('submit', async fun
     if (!error) { document.getElementById('form-add-usuario').reset(); renderizarUsuarios(); cargarTableroPlanificador(); }
 });
 
+// NUEVO: Renderiza usuarios y permite cambiar el cargo desde un selector en la lista
 async function renderizarUsuarios() {
-    const contenedor = document.getElementById('lista-usuarios-contenedor'); contenedor.innerHTML = "";
+    const contenedor = document.getElementById('lista-usuarios-contenedor'); 
+    contenedor.innerHTML = "";
+    
     const { data: lista } = await clienteSupabase.from('usuarios').select('*').neq('rol', 'administrador').order('nombre');
-    if (lista) lista.forEach((u) => {
-        contenedor.innerHTML += `
-            <div class="flex justify-between items-center bg-gray-800 p-2 rounded-lg border border-gray-700 text-sm">
-                <div><span class="font-medium text-gray-200">${u.nombre}</span> <span class="text-[10px] text-indigo-400 uppercase ml-2">[${u.cargo||'General'}]</span></div>
-                <button onclick="eliminarUsuario(${u.id})" class="text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white px-3 py-1 rounded">X</button>
-            </div>`;
-    });
+    
+    if (lista) {
+        lista.forEach((u) => {
+            const cargoActual = u.cargo || 'General';
+            contenedor.innerHTML += `
+                <div class="flex justify-between items-center bg-gray-800 p-2 rounded-lg border border-gray-700 text-sm">
+                    <div class="flex flex-col md:flex-row md:items-center gap-2">
+                        <span class="font-medium text-gray-200">${u.nombre}</span>
+                        <select onchange="actualizarCargoUsuario(${u.id}, this.value)" class="text-[10px] bg-gray-900 border border-gray-600 text-indigo-400 uppercase rounded p-1 outline-none focus:border-indigo-400 cursor-pointer">
+                            <option value="General" ${cargoActual === 'General' ? 'selected' : ''}>General</option>
+                            <option value="Cocinero" ${cargoActual === 'Cocinero' ? 'selected' : ''}>Cocinero</option>
+                            <option value="Lavaplatos" ${cargoActual === 'Lavaplatos' ? 'selected' : ''}>Lavaplatos</option>
+                        </select>
+                    </div>
+                    <button onclick="eliminarUsuario(${u.id})" class="text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white px-3 py-1 rounded">X</button>
+                </div>`;
+        });
+    }
 }
+
+window.actualizarCargoUsuario = async function(id, nuevoCargo) {
+    const { error } = await clienteSupabase.from('usuarios').update({ cargo: nuevoCargo }).eq('id', id);
+    if (error) alert("❌ Error al actualizar el cargo.");
+    else cargarTableroPlanificador(); // Actualiza el tablero con los cargos nuevos
+};
+
 window.eliminarUsuario = async function(id) {
     if (confirm(`¿Seguro que quieres eliminar este usuario?`)) { await clienteSupabase.from('usuarios').delete().eq('id', id); renderizarUsuarios(); cargarTableroPlanificador(); }
 };
