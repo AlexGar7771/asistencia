@@ -4,209 +4,177 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Control de Asistencia</title>
-    <!-- Librerías Externas -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Fuente Pixelada Futurista -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-    <!-- Tu archivo de estilos -->
     <link rel="stylesheet" href="stilo.css">
 </head>
-<body class="bg-gray-900 text-white font-sans flex flex-col items-center justify-center min-h-screen p-4">
+<body class="bg-gray-900 text-white font-sans flex flex-col items-center justify-center min-h-screen p-2 md:p-4">
 
-    <!-- CONTENEDOR PRINCIPAL -->
-    <div id="app" class="w-full max-w-md bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-700">
+    <div id="app" class="w-full max-w-lg md:max-w-6xl bg-gray-800 rounded-2xl shadow-xl p-4 md:p-6 border border-gray-700 overflow-hidden transition-all duration-300">
         
-        <header class="text-center mb-8">
-            <h1 class="text-2xl font-bold tracking-wider text-cyan-400">SISTEMA ASISTENCIA</h1>
+        <header class="text-center mb-6 md:mb-8">
+            <h1 class="text-2xl md:text-3xl font-bold tracking-wider text-cyan-400">SISTEMA ASISTENCIA</h1>
             <p class="text-xs text-gray-400 mt-1">LURA</p>
         </header>
 
         <!-- ============================== -->
         <!-- PANTALLA 1: INICIO DE SESIÓN   -->
         <!-- ============================== -->
-        <div id="pantalla-login" class="space-y-6">
+        <div id="pantalla-login" class="space-y-6 max-w-md mx-auto">
             <h2 class="text-xl font-semibold text-center text-gray-200">Ingreso de Personal</h2>
-            
             <form id="form-login" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Nombre o Código</label>
-                    <input type="text" id="login-nombre" required placeholder="Ej. Pedro" 
-                        class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Contraseña</label>
-                    <input type="password" id="login-password" required placeholder="••••••••" 
-                        class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition-colors">
-                </div>
-
-                <button type="submit" class="w-full bg-cyan-500 hover:bg-cyan-600 text-gray-900 font-bold py-3 rounded-lg shadow-lg hover:shadow-cyan-500/20 transition-all uppercase tracking-wider mt-2">
-                    Entrar
-                </button>
+                <div><label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Nombre o Código</label><input type="text" id="login-nombre" required placeholder="Ej. Pedro" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white focus:border-cyan-500"></div>
+                <div><label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Contraseña</label><input type="password" id="login-password" required placeholder="••••••••" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white focus:border-cyan-500"></div>
+                <button type="submit" class="w-full bg-cyan-500 hover:bg-cyan-600 text-gray-900 font-bold py-3 rounded-lg shadow-lg uppercase tracking-wider mt-2">Entrar</button>
             </form>
-            
-            <div class="text-center pt-2">
-                <button id="btn-ir-admin" class="text-xs text-cyan-400/70 hover:text-cyan-400 underline">
-                    Acceso Administrador
-                </button>
-            </div>
+            <div class="text-center pt-2"><button id="btn-ir-admin" class="text-xs text-cyan-400/70 hover:text-cyan-400 underline">Acceso Administrador</button></div>
         </div>
 
         <!-- ============================== -->
         <!-- PANTALLA 2: ASISTENCIA         -->
         <!-- ============================== -->
-        <div id="pantalla-asistencia" class="hidden space-y-6">
+        <div id="pantalla-asistencia" class="hidden space-y-6 max-w-md mx-auto">
             <div class="text-center bg-gray-900/50 rounded-xl p-3 border border-gray-700/50">
                 <span class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Día Actual</span>
                 <div id="txt-fecha-hoy" class="text-xl font-bold text-cyan-400 mt-0.5">--/--</div>
+                <div id="txt-mi-cargo" class="text-xs text-indigo-400 font-bold mt-1 uppercase tracking-widest"></div>
             </div>
             
-            <!-- CRONÓMETRO EN TIEMPO REAL -->
             <div id="display-timer" class="hidden flex flex-col items-center justify-center bg-gray-950 border border-gray-700 p-4 rounded-xl shadow-inner">
                 <span class="text-xs text-gray-500 uppercase tracking-widest mb-1">Tiempo trabajado :)</span>
                 <span id="timer-numeros" class="efecto-futurista">00:00:00</span>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
-                <button id="btn-entrada" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 px-2 rounded-xl shadow-lg transition-all flex flex-col items-center justify-center space-y-1">
-                    <span class="text-2xl">🟢</span>
-                    <span class="text-sm tracking-wide uppercase">Entrada</span>
-                </button>
-                <button id="btn-salida" class="bg-rose-600 hover:bg-rose-500 text-white font-bold py-4 px-2 rounded-xl shadow-lg transition-all flex flex-col items-center justify-center space-y-1 opacity-50 cursor-not-allowed" disabled>
-                    <span class="text-2xl">🔴</span>
-                    <span class="text-sm tracking-wide uppercase">Salida</span>
-                </button>
+                <button id="btn-entrada" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 px-2 rounded-xl shadow-lg transition-all flex flex-col items-center justify-center space-y-1"><span class="text-2xl md:text-3xl">🟢</span><span class="text-xs md:text-sm tracking-wide uppercase">Entrada</span></button>
+                <button id="btn-salida" class="bg-rose-600 hover:bg-rose-500 text-white font-bold py-4 px-2 rounded-xl shadow-lg transition-all flex flex-col items-center justify-center space-y-1 opacity-50 cursor-not-allowed" disabled><span class="text-2xl md:text-3xl">🔴</span><span class="text-xs md:text-sm tracking-wide uppercase">Salida</span></button>
+            </div>
+
+            <div class="bg-indigo-900/30 rounded-xl p-4 border border-indigo-500/30 space-y-2">
+                <h3 class="text-xs font-bold text-indigo-300 uppercase tracking-wider border-b border-indigo-500/30 pb-1">Mi Horario de esta semana</h3>
+                <div id="mi-horario-semana" class="grid grid-cols-2 gap-2 text-xs text-gray-300 mt-2"></div>
             </div>
 
             <div class="bg-gray-900 rounded-xl p-4 border border-gray-700 space-y-3">
                 <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-700 pb-2">Reporte del Día</h3>
-                <div class="flex justify-between items-center text-sm">
-                    <span class="text-gray-400">Hora Entrada:</span>
-                    <span id="rep-entrada" class="font-mono font-bold text-gray-200">--:-- Horas</span>
-                </div>
-                <div class="flex justify-between items-center text-sm">
-                    <span class="text-gray-400">Hora Salida:</span>
-                    <span id="rep-salida" class="font-mono font-bold text-gray-200">--:-- Horas</span>
-                </div>
-                <div class="border-t border-gray-800 my-2 pt-2 flex justify-between items-center text-sm">
-                    <span class="text-cyan-400 font-semibold">Total Horas:</span>
-                    <span id="rep-total" class="font-bold text-cyan-400">0 Horas</span>
-                </div>
-                <div class="flex justify-between items-center text-sm">
-                    <span class="text-amber-400 font-semibold">Hora Extra:</span>
-                    <span id="rep-extra" class="font-bold text-amber-400">0 Horas</span>
-                </div>
+                <div class="flex justify-between text-sm"><span class="text-gray-400">Hora Entrada:</span><span id="rep-entrada" class="font-mono font-bold text-gray-200">--:-- Horas</span></div>
+                <div class="flex justify-between text-sm"><span class="text-gray-400">Hora Salida:</span><span id="rep-salida" class="font-mono font-bold text-gray-200">--:-- Horas</span></div>
+                <div class="border-t border-gray-800 my-2 pt-2 flex justify-between text-sm"><span class="text-cyan-400 font-semibold">Total Horas:</span><span id="rep-total" class="font-bold text-cyan-400">0 Horas</span></div>
+                <div class="flex justify-between text-sm"><span class="text-amber-400 font-semibold">Hora Extra:</span><span id="rep-extra" class="font-bold text-amber-400">0 Horas</span></div>
             </div>
 
-            <!-- HISTORIAL INDIVIDUAL DEL TRABAJADOR -->
-            <button id="btn-ver-historial" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-lg text-xs tracking-wider uppercase transition-colors">
-                📅 Ver Mi Historial
-            </button>
-
+            <button id="btn-ver-historial" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-lg text-xs tracking-wider uppercase transition-colors">📅 Ver Mi Historial</button>
             <div id="contenedor-historial" class="hidden bg-gray-900 p-4 rounded-xl border border-gray-700 space-y-3">
-                <div class="flex justify-between items-center border-b border-gray-700 pb-2">
-                    <h3 class="text-xs font-bold text-cyan-400 uppercase tracking-wider">Mis Marcas Anteriores</h3>
-                    <button id="btn-cerrar-historial" class="text-xs text-rose-400 hover:text-rose-300">Ocultar</button>
-                </div>
-                <div id="lista-mi-historial" class="space-y-2 max-h-40 overflow-y-auto pr-1 text-sm">
-                    <!-- JS inyecta datos aquí -->
-                </div>
-                <div class="border-t border-gray-700 pt-2 flex justify-between text-xs font-bold text-gray-300">
-                    <span>TOTAL ACUMULADO:</span>
-                    <span id="mi-historial-total" class="text-emerald-400">0 h</span>
-                </div>
+                <div class="flex justify-between border-b border-gray-700 pb-2"><h3 class="text-xs font-bold text-cyan-400 uppercase">Mis Marcas Anteriores</h3><button id="btn-cerrar-historial" class="text-xs text-rose-400 font-bold">Ocultar</button></div>
+                <div id="lista-mi-historial" class="space-y-2 max-h-40 overflow-y-auto pr-1 text-sm"></div>
+                <div class="border-t border-gray-700 pt-2 flex justify-between text-xs font-bold text-gray-300"><span>TOTAL ACUMULADO:</span><span id="mi-historial-total" class="text-emerald-400">0 h</span></div>
             </div>
 
-            <button id="btn-logout" class="w-full bg-gray-700 hover:bg-gray-600 text-gray-300 py-2 rounded-lg text-xs transition-colors mt-2">
-                Cerrar Sesión
-            </button>
+            <button id="btn-logout" class="w-full bg-gray-700 hover:bg-gray-600 text-gray-300 py-3 rounded-lg text-xs font-bold uppercase transition-colors mt-2">Cerrar Sesión</button>
         </div>
 
         <!-- ============================== -->
         <!-- PANTALLA 3: VISTA ADMINISTRADOR-->
         <!-- ============================== -->
         <div id="pantalla-admin" class="hidden space-y-4">
-            <div class="flex justify-between items-center border-b border-gray-700 pb-2">
-                <h2 class="text-lg font-bold text-cyan-400">Panel Administrador</h2>
-                <button id="btn-admin-salir" class="text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded-lg">Salir</button>
+            <div class="flex flex-col md:flex-row md:justify-between md:items-center border-b border-gray-700 pb-3 gap-2">
+                <h2 class="text-xl font-bold text-cyan-400">Panel Administrador</h2>
+                <button id="btn-admin-salir" class="text-xs font-bold bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg w-full md:w-auto">Cerrar Sesión</button>
             </div>
 
-            <!-- Sistema de Pestañas -->
-            <div class="flex space-x-2 border-b border-gray-700 pb-2">
-                <button id="tab-gestion" class="bg-cyan-600 text-white px-4 py-1.5 rounded-t-lg text-sm font-bold transition-colors">Gestión</button>
-                <button id="tab-reportes" class="bg-gray-800 text-gray-400 hover:text-gray-200 px-4 py-1.5 rounded-t-lg text-sm font-bold transition-colors">Reportes</button>
+            <div class="flex space-x-1 border-b border-gray-700 pb-2 overflow-x-auto w-full no-scrollbar">
+                <button id="tab-gestion" class="bg-cyan-600 text-white px-4 py-2 rounded-t-lg text-xs md:text-sm font-bold transition-colors whitespace-nowrap">Gestión Usuarios</button>
+                <button id="tab-horarios" class="bg-gray-800 text-gray-400 hover:text-gray-200 px-4 py-2 rounded-t-lg text-xs md:text-sm font-bold transition-colors whitespace-nowrap">Tablero Horarios</button>
+                <button id="tab-reportes" class="bg-gray-800 text-gray-400 hover:text-gray-200 px-4 py-2 rounded-t-lg text-xs md:text-sm font-bold transition-colors whitespace-nowrap">Reportes / Excel</button>
             </div>
 
             <!-- PESTAÑA A: GESTIÓN -->
-            <div id="admin-gestion" class="space-y-4">
-                <form id="form-add-usuario" class="bg-gray-900 p-4 rounded-xl border border-gray-700 space-y-3">
+            <div id="admin-gestion" class="space-y-4 max-w-lg mx-auto md:max-w-none md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
+                <form id="form-add-usuario" class="bg-gray-900 p-4 rounded-xl border border-gray-700 space-y-3 h-fit">
                     <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Añadir Compañero</h3>
-                    <div><input type="text" id="add-nombre" required placeholder="Nombre Completo" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"></div>
-                    <div><input type="password" id="add-password" required placeholder="Contraseña" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"></div>
-                    <button type="submit" class="w-full bg-cyan-500 hover:bg-cyan-600 text-gray-900 font-bold py-2 rounded-lg text-xs uppercase tracking-wider">Añadir Usuario</button>
+                    <div><input type="text" id="add-nombre" required placeholder="Nombre Completo" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-cyan-500"></div>
+                    <div><input type="password" id="add-password" required placeholder="Contraseña" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-cyan-500"></div>
+                    <div>
+                        <select id="add-cargo" required class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-cyan-500">
+                            <option value="General">General / Mesero</option>
+                            <option value="Cocinero">Cocinero</option>
+                            <option value="Lavaplatos">Lavaplatos</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full bg-cyan-500 hover:bg-cyan-600 text-gray-900 font-bold py-2.5 rounded-lg text-xs uppercase">Añadir Usuario</button>
                 </form>
 
-                <div class="space-y-3">
+                <div class="space-y-3 bg-gray-900 p-4 rounded-xl border border-gray-700">
                     <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Compañeros Registrados</h3>
-                    <div id="lista-usuarios-contenedor" class="space-y-2 max-h-32 overflow-y-auto pr-1"></div>
-                </div>
-
-                <div class="space-y-3 pt-2 border-t border-gray-700/50">
-                    <h3 class="text-xs font-bold text-amber-400 tracking-wider uppercase">Historial de Marcas</h3>
-                    <div id="lista-asistencias-admin" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+                    <div id="lista-usuarios-contenedor" class="space-y-2 max-h-64 overflow-y-auto pr-1"></div>
                 </div>
             </div>
 
-            <!-- PESTAÑA B: REPORTES DETALLADOS -->
+            <!-- PESTAÑA B: HORARIOS -->
+            <div id="admin-horarios" class="hidden space-y-4">
+                <div class="bg-gray-900 p-4 rounded-xl border border-gray-700 flex flex-col md:flex-row justify-between items-center gap-3">
+                    <div class="text-center md:text-left">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Planificación Semanal</h3>
+                        <p class="text-[10px] md:text-xs text-gray-500 mt-1">Colores: <span class="text-rose-400">Falta </span> | <span class="text-emerald-400">42-44h </span> | <span class="text-amber-400">Menos de 42h</span></p>
+                    </div>
+                    <input type="week" id="horario-semana-global" class="w-full md:w-auto bg-gray-800 border border-cyan-700/50 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-400">
+                </div>
+
+                <div class="bg-gray-900 rounded-xl border border-gray-700 overflow-hidden shadow-inner flex flex-col relative">
+                    <div class="overflow-x-auto custom-scrollbar" id="captura-tablero">
+                        <table class="w-full text-left text-xs whitespace-nowrap min-w-[800px]">
+                            <thead class="bg-gray-800/80 text-gray-400 border-b border-gray-700">
+                                <tr>
+                                    <th class="p-2 font-bold sticky left-0 bg-gray-800 z-10 border-r border-gray-700">Empleado</th>
+                                    <th class="p-1 text-center">Lunes</th>
+                                    <th class="p-1 text-center">Martes</th>
+                                    <th class="p-1 text-center">Miércoles</th>
+                                    <th class="p-1 text-center">Jueves</th>
+                                    <th class="p-1 text-center">Viernes</th>
+                                    <th class="p-1 text-center">Sábado</th>
+                                    <th class="p-1 text-center">Domingo</th>
+                                    <th class="p-1 text-center text-amber-400 bg-gray-950/30">+ Extras</th>
+                                    <th class="p-2 text-center text-cyan-400 bg-gray-950/50">TOTAL</th>
+                                </tr>
+                            </thead>
+                            <tbody id="body-planificador" class="divide-y divide-gray-800"></tbody>
+                        </table>
+                    </div>
+                    <div id="alertas-turnos" class="bg-gray-950 p-2 text-xs border-t border-gray-700 flex flex-col gap-1"></div>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-2">
+                    <button id="btn-guardar-planificador" class="w-full md:w-1/2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-lg text-xs uppercase tracking-wider transition-all shadow-lg flex justify-center items-center gap-2"><span class="text-lg">💾</span> Guardar Horarios</button>
+                    <button id="btn-compartir-wa" class="w-full md:w-1/2 bg-green-500 hover:bg-green-400 text-gray-900 font-bold py-3 rounded-lg text-xs uppercase tracking-wider transition-all shadow-lg flex justify-center items-center gap-2"><span class="text-lg">📱</span> Enviar Foto a WhatsApp</button>
+                </div>
+            </div>
+
+            <!-- PESTAÑA C: REPORTES DETALLADOS -->
             <div id="admin-reportes" class="hidden space-y-4">
-                <div class="bg-gray-900 p-4 rounded-xl border border-gray-700 space-y-3">
-                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Filtro de Quincena</h3>
-                    <div class="flex space-x-2">
-                        <div class="w-1/2">
-                            <label class="text-xs text-gray-500 block mb-1">Desde:</label>
-                            <input type="date" id="filtro-inicio" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-sm text-white focus:outline-none">
-                        </div>
-                        <div class="w-1/2">
-                            <label class="text-xs text-gray-500 block mb-1">Hasta:</label>
-                            <input type="date" id="filtro-fin" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-sm text-white focus:outline-none">
-                        </div>
+                <div class="bg-gray-900 p-4 rounded-xl border border-gray-700 space-y-3 max-w-2xl mx-auto">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider text-center md:text-left">Filtro de Quincena</h3>
+                    <div class="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-3">
+                        <div class="w-full md:w-1/2"><label class="text-xs text-gray-500 block mb-1">Desde:</label><input type="date" id="filtro-inicio" class="w-full bg-gray-800 rounded-lg px-2 py-2 text-sm text-white"></div>
+                        <div class="w-full md:w-1/2"><label class="text-xs text-gray-500 block mb-1">Hasta:</label><input type="date" id="filtro-fin" class="w-full bg-gray-800 rounded-lg px-2 py-2 text-sm text-white"></div>
                     </div>
-                    <div class="flex space-x-2 pt-2">
-                        <button id="btn-generar-reporte" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 rounded-lg text-xs uppercase tracking-wider">Generar Desglose</button>
-                    </div>
+                    <button id="btn-generar-reporte" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 rounded-lg text-xs uppercase tracking-wider mt-4">Generar Desglose</button>
                 </div>
-
-                <div class="flex justify-end space-x-2">
-                    <button id="btn-exportar" class="hidden bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-3 rounded-lg text-xs tracking-wider uppercase shadow-lg">📊 Excel</button>
-                    <button id="btn-imprimir" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-3 rounded-lg text-xs tracking-wider uppercase shadow-lg">🖨️ Imprimir</button>
+                <div class="flex justify-center md:justify-end space-x-2">
+                    <button id="btn-exportar" class="hidden bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-lg text-xs md:text-sm tracking-wider uppercase shadow-lg">📊 Exportar a Excel</button>
                 </div>
-
-                <!-- ÁREA DE IMPRESIÓN (Blanco y Negro para papel) -->
-                <div id="area-impresion" class="bg-white text-black p-4 rounded border hidden overflow-x-auto">
+                <div id="area-impresion" class="bg-white text-black p-2 md:p-4 rounded border hidden overflow-x-auto custom-scrollbar">
                     <h2 class="text-lg font-bold text-center mb-1 uppercase">Reporte Detallado de Asistencia</h2>
                     <p id="rango-impresion" class="text-xs text-center text-gray-600 mb-4"></p>
-                    <table class="w-full text-xs text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-200 border-b-2 border-gray-800">
-                                <th class="p-2 border border-gray-400">Empleado</th>
-                                <th class="p-2 border border-gray-400 text-center">Fecha</th>
-                                <th class="p-2 border border-gray-400 text-center">Entrada</th>
-                                <th class="p-2 border border-gray-400 text-center">Salida</th>
-                                <th class="p-2 border border-gray-400 text-center">Normales</th>
-                                <th class="p-2 border border-gray-400 text-center">Extras</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabla-reporte-body">
-                            <!-- Datos generados por JS -->
-                        </tbody>
+                    <table class="w-full text-xs text-left border-collapse min-w-[600px]" id="tabla-exportacion">
+                        <thead><tr class="bg-gray-200 border-b-2 border-gray-800"><th class="p-2 border border-gray-400">Empleado</th><th class="p-2 border border-gray-400 text-center">Fecha</th><th class="p-2 border border-gray-400 text-center">Entrada</th><th class="p-2 border border-gray-400 text-center">Salida</th><th class="p-2 border border-gray-400 text-center">Normales</th><th class="p-2 border border-gray-400 text-center">Extras</th></tr></thead>
+                        <tbody id="tabla-reporte-body"></tbody>
                     </table>
                 </div>
             </div>
         </div>
-
-    </div> <!-- CIERRE DEL CONTENEDOR PRINCIPAL #app -->
-
+    </div>
     <script src="app.js"></script>
 </body>
 </html>
