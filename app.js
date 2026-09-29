@@ -7,9 +7,6 @@ const clienteSupabase = supabase.createClient(miUrl, miKey);
 
 let usuarioLogueado = null; 
 
-// ==========================================
-// 🕒 UTILIDADES DE FECHA Y HORA
-// ==========================================
 function obtenerFechaLocal() {
     const ahora = new Date();
     const año = ahora.getFullYear();
@@ -33,21 +30,15 @@ function obtenerSemanaActual() {
     return `${d.getFullYear()}-W${String(Math.ceil(days / 7)).padStart(2, '0')}`;
 }
 
-// ==========================================
-// SELECTORES DOM
-// ==========================================
 const pantallaLogin = document.getElementById('pantalla-login');
 const pantallaAsistencia = document.getElementById('pantalla-asistencia');
 const pantallaAdmin = document.getElementById('pantalla-admin');
-const formLogin = document.getElementById('form-login');
-const inputNombre = document.getElementById('login-nombre');
-const inputPassword = document.getElementById('login-password');
 const displayTimer = document.getElementById('display-timer');
 const timerNumeros = document.getElementById('timer-numeros');
 let intervaloTimer = null; 
 
 // ==========================================
-// 1. INICIO DE SESIÓN 
+// 1. LOGIN Y PERFIL
 // ==========================================
 document.getElementById('form-login').addEventListener('submit', async function(e) {
     e.preventDefault(); 
@@ -211,7 +202,6 @@ document.getElementById('form-add-usuario').addEventListener('submit', async fun
     if (!error) { document.getElementById('form-add-usuario').reset(); renderizarUsuarios(); cargarTableroPlanificador(); }
 });
 
-// NUEVO: Renderiza usuarios y permite cambiar el cargo desde un selector en la lista
 async function renderizarUsuarios() {
     const contenedor = document.getElementById('lista-usuarios-contenedor'); 
     contenedor.innerHTML = "";
@@ -240,7 +230,7 @@ async function renderizarUsuarios() {
 window.actualizarCargoUsuario = async function(id, nuevoCargo) {
     const { error } = await clienteSupabase.from('usuarios').update({ cargo: nuevoCargo }).eq('id', id);
     if (error) alert("❌ Error al actualizar el cargo.");
-    else cargarTableroPlanificador(); // Actualiza el tablero con los cargos nuevos
+    else cargarTableroPlanificador(); 
 };
 
 window.eliminarUsuario = async function(id) {
@@ -248,9 +238,9 @@ window.eliminarUsuario = async function(id) {
 };
 
 // ==========================================
-// 5. ADMIN: TABLERO INTELIGENTE Y VALIDACIONES
+// 5. ADMIN: TABLERO INTELIGENTE Y TURNOS PERSONALIZADOS
 // ==========================================
-const TURNOS = [
+let TURNOS = [
     { id: '', text: '⚠️ Asignar', horas: 0, color: 'bg-rose-950/80 text-rose-300 border-rose-700', tipo: 'NA' },
     { id: 'Descanso', text: '🛌 Descanso', horas: 0, color: 'bg-gray-800 text-gray-500 border-gray-600', tipo: 'NA' },
     { id: '6:30 a 13:30', text: '☀️ 6:30 a 13:30', horas: 7, color: 'bg-emerald-900/40 text-emerald-300 border-emerald-700', tipo: 'AM' },
@@ -260,6 +250,34 @@ const TURNOS = [
     { id: '15:00 a 22:00', text: '🌙 15:00 a 22:00', horas: 7, color: 'bg-purple-900/40 text-purple-300 border-purple-700', tipo: 'PM' },
     { id: '16:00 a 22:00', text: '🌙 16:00 a 22:00', horas: 6, color: 'bg-purple-900/40 text-purple-300 border-purple-700', tipo: 'PM' }
 ];
+
+// Cargar turnos creados por el admin desde la memoria local
+const turnosGuardados = JSON.parse(localStorage.getItem('turnos_custom')) || [];
+TURNOS = TURNOS.concat(turnosGuardados);
+
+// CREAR NUEVO TURNO
+document.getElementById('btn-crear-turno').addEventListener('click', () => {
+    const texto = document.getElementById('nuevo-turno-texto').value.trim();
+    const horas = parseFloat(document.getElementById('nuevo-turno-horas').value);
+    const tipo = document.getElementById('nuevo-turno-tipo').value;
+
+    if (!texto || isNaN(horas)) return alert("⚠️ Ingresa el horario y la cantidad de horas.");
+    if (TURNOS.find(t => t.id === texto)) return alert("⚠️ Este turno ya existe.");
+
+    const nuevoTurno = {
+        id: texto, text: `${tipo === 'AM' ? '☀️' : '🌙'} ${texto}`, horas: horas,
+        color: tipo === 'AM' ? 'bg-emerald-900/40 text-emerald-300 border-emerald-700' : 'bg-purple-900/40 text-purple-300 border-purple-700',
+        tipo: tipo
+    };
+
+    TURNOS.push(nuevoTurno);
+    const guardados = JSON.parse(localStorage.getItem('turnos_custom')) || [];
+    guardados.push(nuevoTurno);
+    localStorage.setItem('turnos_custom', JSON.stringify(guardados));
+
+    document.getElementById('nuevo-turno-texto').value = ''; document.getElementById('nuevo-turno-horas').value = '';
+    cargarTableroPlanificador();
+});
 
 const inputSemanaGlobal = document.getElementById('horario-semana-global');
 const bodyPlanificador = document.getElementById('body-planificador');
