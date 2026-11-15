@@ -29,3 +29,9 @@ body {
 .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
 }
+
+select.day-select option {
+    background-color: #0f172a; /* slate-900 sólido */
+    color: #f8fafc;            /* texto blanco limpio */
+    font-family: 'JetBrains Mono', monospace;
+}
