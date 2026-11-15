@@ -1,69 +1,31 @@
-/* Configuración exclusiva para cuando se manda a imprimir */
 @media print {
-    body * {
-        visibility: hidden; /* Oculta toda la app web */
-    }
-    #area-impresion, #area-impresion * {
-        visibility: visible; /* Solo muestra la tabla blanca */
-    }
-    #area-impresion {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        border: none;
-    }
+    body * { visibility: hidden; }
+    #area-impresion, #area-impresion * { visibility: visible; }
+    #area-impresion { position: absolute; left: 0; top: 0; width: 100%; border: none; overflow: visible; }
 }
 
-/* Estilos globales personalizados para el proyecto */
-html, body {
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* Personalización de la barra de desplazamiento en la lista de usuarios */
-#lista-usuarios-contenedor::-webkit-scrollbar,
-#lista-asistencias-admin::-webkit-scrollbar {
-    width: 4px;
+.font-mono {
+    font-family: 'JetBrains Mono', monospace;
 }
-#lista-usuarios-contenedor::-webkit-scrollbar-thumb,
-#lista-asistencias-admin::-webkit-scrollbar-thumb {
-    background-color: #4b5563;
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #334155;
     border-radius: 4px;
 }
-
-/* ==========================================
-   ⏱ EFECTO FUTURISTA DEL TIMER
-   ========================================== */
-.efecto-futurista {
-    font-family: 'VT323', monospace;
-    font-size: 3.5rem; /* Tamaño grande */
-    color: #ffffff;
-    letter-spacing: 4px;
-    /* Efecto de resplandor Neón */
-    text-shadow: 
-        0 0 5px #fff,
-        0 0 10px #22d3ee,
-        0 0 20px #22d3ee,
-        0 0 40px #06b6d4,
-        0 0 80px #0891b2;
-    /* animación de parpadeo */
-    animation: parpadeo-neon 2s infinite alternate;
-}
-
-/* Animación de inestabilidad (Glitch/Flicker) */
-@keyframes parpadeo-neon {
-    0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
-        opacity: 1;
-        text-shadow: 
-            0 0 5px #fff,
-            0 0 10px #22d3ee,
-            0 0 20px #22d3ee,
-            0 0 40px #06b6d4;
-    }
-    20%, 24%, 55% {
-        opacity: 0.7;
-        text-shadow: none; /* Apaga el brillo por una fracción de segundo */
-    }
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
 }
